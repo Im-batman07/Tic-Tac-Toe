@@ -288,23 +288,6 @@
       <footer><small>The game was created with AI help — now with local assistant (no API).</small></footer>
     </div>
 
-    <!-- Side panel showing a short editable project description and small KB -->
-    <aside class="side-panel" aria-label="Assistant info panel">
-      <h3 style="margin-bottom:8px">Project Info</h3>
-      <label style="font-size:.9rem;color:#374151">Project Description (used by assistant when answering):</label>
-      <textarea id="projectDescription" class="proj-desc">This is a Tic Tac Toe web game with 3D UI, a local computer opponent, game history, and an integrated local assistant that answers questions about the project. It's implemented as a single HTML file and runs entirely in the browser with no server.</textarea>
-
-      <div class="kb-editor">
-        <label style="font-size:.9rem;color:#374151">Knowledge base (Q → A). Add entries to teach the assistant:</label>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input id="kbQ" placeholder="question (e.g. how to play)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
-          <input id="kbA" placeholder="answer (short)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
-          <button id="teachBtn" class="btn">Teach</button>
-        </div>
-        <p style="font-size:.82rem;color:#64748b;margin-top:8px">You can add quick Q/A pairs that the assistant will use immediately.</p>
-      </div>
-    </aside>
-  </div>
 
   <!-- History modal -->
   <div class="overlay" id="overlay">
