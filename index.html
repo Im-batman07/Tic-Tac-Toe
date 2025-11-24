@@ -1,309 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tic Tac Toe — vs Computer & Local AI Assistant</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at 10% 10%, #7b61ff 0%, #4f46e5 30%, #0f172a 100%);
+      color:#111;
+      padding:24px;
+    }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+    /* 3D container */
+    .stage{
+      perspective:1200px;
+      width:100%;
+      max-width:920px;
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+    }
 
-        .container {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-        }
+    .container{
+      position:relative;
+      margin:0 auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.85));
+      border-radius:16px;
+      padding:28px;
+      box-shadow: 0 20px 50px rgba(2,6,23,0.6), inset 0 -6px 24px rgba(255,255,255,0.2);
+      transform-style:preserve-3d;
+      transform: rotateX(6deg) translateZ(0);
+      width:600px;
+    }
 
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 2.5rem;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-        }
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
 
-        .status {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: #555;
-            font-weight: bold;
-        }
+    h1{font-size:1.6rem;color:#0b1020;letter-spacing:-0.5px}
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
 
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 10px;
-            margin-bottom: 20px;
-        }
+    .btn, button{
+      background:#0f172a;
+      color:white;
+      border:none;
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.35);
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .btn:hover, button:hover{transform:translateY(-4px);box-shadow: 0 12px 28px rgba(15,23,42,0.45)}
 
-        .cell {
-            background: #f0f0f0;
-            aspect-ratio: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
+    #historyBtn{
+      position:absolute;
+      right:18px;
+      top:18px;
+      background:linear-gradient(180deg,#10b981,#059669);
+      padding:6px 10px;
+      border-radius:8px;
+      box-shadow: 0 8px 20px rgba(5,150,105,0.25);
+    }
 
-        .cell:hover {
-            background: #e0e0e0;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
+    .status{
+      font-size:1.05rem;
+      margin-bottom:12px;
+      color:#14213d;
+      font-weight:700;
+    }
 
-        .cell.x {
-            color: #e74c3c;
-        }
+    .score-container{
+      display:flex;
+      gap:10px;
+      margin-bottom:18px;
+      align-items:center;
+    }
+    .score{
+      flex:1;
+      background:rgba(15,23,42,0.03);
+      padding:10px;
+      border-radius:10px;
+      text-align:center;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.05);
+    }
+    .score h3{margin-bottom:6px;font-size:.9rem}
+    .score p{font-size:1.3rem;font-weight:800}
 
-        .cell.o {
-            color: #3498db;
-        }
+    /* 3D board */
+    .board-wrap{
+      display:flex;
+      justify-content:center;
+      margin-bottom:18px;
+      transform-style:preserve-3d;
+    }
 
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .board{
+      display:grid;
+      grid-template-columns:repeat(3,120px);
+      grid-template-rows:repeat(3,120px);
+      gap:12px;
+      padding:18px;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,247,255,0.6));
+      box-shadow: 0 18px 40px rgba(2,6,23,0.35);
+      transform: translateZ(40px) rotateX(6deg);
+    }
 
-        button:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        }
+    .cell{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2.6rem;
+      font-weight:900;
+      background:linear-gradient(180deg,#fff,#f2f6ff);
+      border-radius:12px;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 10px 20px rgba(2,6,23,0.08);
+      transition: transform .15s cubic-bezier(.2,.9,.3,1), box-shadow .15s;
+      transform-style:preserve-3d;
+      perspective:800px;
+    }
+    .cell:hover{ transform: translateY(-8px) translateZ(14px) rotateX(6deg); box-shadow: 0 24px 40px rgba(3,7,20,0.18); }
 
-        .score-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
+    .cell.x{ color:#ef4444; text-shadow: 0 2px 0 rgba(0,0,0,0.06); }
+    .cell.o{ color:#2563eb; text-shadow: 0 2px 0 rgba(0,0,0,0.06); }
 
-        .score {
-            padding: 10px 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            margin: 0 5px;
-        }
+    .options{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:10px;
+      justify-content:center;
+    }
 
-        .x-score {
-            color: #e74c3c;
-        }
+    .small{font-size:.9rem;padding:6px 10px;border-radius:8px;background:rgba(15,23,42,0.06)}
 
-        .o-score {
-            color: #3498db;
-        }
+    /* assistant / chat UI */
+    .side-panel{
+      width:320px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,255,0.98));
+      border-radius:16px;
+      padding:12px;
+      box-shadow: 0 20px 50px rgba(2,6,23,0.6);
+      position:relative;
+      transform-style:preserve-3d;
+    }
 
-        .ties {
-            color: #7f8c8d;
-        }
+    .assistant-toggle{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:90;
+      border-radius:50%;
+      width:56px;height:56px;
+      display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#ef4444,#dc2626);
+      color:white;font-weight:800;font-size:1.1rem;
+      box-shadow: 0 14px 34px rgba(220,38,38,0.28);
+      cursor:pointer;
+    }
+    .assistant-panel{
+      position:fixed;
+      right:24px;
+      bottom:86px;
+      width:360px;
+      max-width:92%;
+      background:white;
+      border-radius:12px;
+      box-shadow:0 30px 80px rgba(2,6,23,0.6);
+      display:none;
+      flex-direction:column;
+      overflow:hidden;
+      z-index:95;
+    }
+    .assistant-header{padding:12px 14px;background:linear-gradient(90deg,#111827,#0f172a);color:white;display:flex;align-items:center;justify-content:space-between}
+    .assistant-body{padding:10px;height:300px;overflow:auto;background:#f8fafc}
+    .assistant-input{display:flex;gap:8px;padding:10px;border-top:1px solid #eef2f7;background:white}
+    .chat-bubble{padding:8px 10px;border-radius:10px;margin:8px 0;max-width:85%;}
+    .from-user{background:linear-gradient(90deg,#e2e8f0,#ffffff);margin-left:auto;text-align:right}
+    .from-bot{background:linear-gradient(90deg,#0ea5a5,#60a5fa);color:white}
+    .kb-editor{margin-top:10px;font-size:.9rem}
+    .proj-desc{width:100%;height:80px;border-radius:8px;padding:8px;border:1px solid #e6eef8;resize:vertical}
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .cell {
-                font-size: 2.5rem;
-            }
-        }
-    </style>
+    /* modal/history */
+    .overlay{ position:fixed; inset:0; background:rgba(2,6,23,0.45); display:none; align-items:center; justify-content:center; z-index:60 }
+    .panel{
+      background:white; padding:18px; border-radius:12px; width:320px; max-width:92%;
+      box-shadow: 0 24px 64px rgba(2,6,23,0.5);
+    }
+    .panel h3{margin-bottom:8px}
+    .history-list{max-height:220px; overflow:auto; margin-top:8px; padding-right:6px}
+    .history-item{padding:8px 6px;border-bottom:1px solid #f1f3f5;font-weight:700;display:flex;justify-content:space-between}
+
+    /* congrats full screen */
+    .congrats{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:80;
+      pointer-events:none;
+    }
+    .confetti { position:absolute; width:10px;height:18px; opacity:0; transform:translateY(-300px) rotate(0deg); animation: fall 1400ms linear forwards; }
+    @keyframes fall { 0%{opacity:1; transform:translateY(-300px) rotate(0deg)} 100%{opacity:1; transform:translateY(80vh) rotate(720deg)} }
+    .congrats-card{ background:linear-gradient(90deg,#0ea5a5,#60a5fa); padding:24px 36px; border-radius:18px; box-shadow:0 18px 48px rgba(2,6,23,0.45); color:white; text-align:center; transform:translateY(-20px) scale(.95); animation: pop 420ms cubic-bezier(.2,.8,.2,1) forwards; pointer-events:auto;}
+    @keyframes pop { to{ transform:translateY(0) scale(1) } }
+
+    /* responsive */
+    @media (max-width:920px){
+      .stage{flex-direction:column;align-items:center}
+      .container{width:100%}
+    }
+
+    @media (max-width:520px){
+      .board{ grid-template-columns:repeat(3,84px); grid-template-rows:repeat(3,84px); gap:8px; padding:12px }
+      .cell{ font-size:2rem }
+    }
+
+    footer{ margin-top:12px; text-align:center; font-size:.85rem; color:#334155 }
+  </style>
 </head>
 <body>
-
-    <div class="container">
+  <div class="stage">
+    <div class="container" role="main" aria-label="Tic Tac Toe game">
+      <header>
         <h1>Tic Tac Toe</h1>
-        <div class="status" id="status">X's turn</div>
-        
-        <div class="score-container">
-            <div class="score x-score">
-                <h3>X</h3>
-                <p id="x-score">0</p>
-            </div>
-            <div class="score ties">
-                <h3>Ties</h3>
-                <p id="ties">0</p>
-            </div>
-            <div class="score o-score">
-                <h3>O</h3>
-                <p id="o-score">0</p>
-            </div>
+
+        <div class="controls">
+          <div class="options small" aria-hidden>
+            <label>
+              <input type="radio" name="mode" id="modeHuman" checked /> Human vs Human
+            </label>
+            <label style="margin-left:8px">
+              <input type="radio" name="mode" id="modeComputer" /> Human vs Computer (you = X)
+            </label>
+          </div>
+
+          <button id="reset-button" class="btn">Reset</button>
         </div>
-        
-        <div class="board" id="board">
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
-            <div class="cell" data-cell></div>
+
+        <button id="historyBtn" title="Show history">History</button>
+      </header>
+
+      <div class="status" id="status">X's turn</div>
+
+      <div class="score-container">
+        <div class="score x-score">
+          <h3>X</h3>
+          <p id="x-score">0</p>
         </div>
-        
-        <button id="reset-button">Reset Game</button>
+        <div class="score ties">
+          <h3>Ties</h3>
+          <p id="ties">0</p>
+        </div>
+        <div class="score o-score">
+          <h3>O</h3>
+          <p id="o-score">0</p>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" role="grid" aria-label="tic tac toe board">
+          <!-- 9 cells -->
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+          <div class="cell" data-cell></div>
+        </div>
+      </div>
+
+      <footer><small>The game was created with AI help — now with local assistant (no API).</small></footer>
     </div>
 
-    <script>
-        const statusDisplay = document.getElementById('status');
-        const cells = document.querySelectorAll('[data-cell]');
-        const resetButton = document.getElementById('reset-button');
-        const xScoreDisplay = document.getElementById('x-score');
-        const oScoreDisplay = document.getElementById('o-score');
-        const tiesDisplay = document.getElementById('ties');
-        
-        let currentPlayer = 'X';
-        let gameActive = true;
-        let gameState = ["", "", "", "", "", "", "", "", ""];
-        let scores = {
-            X: 0,
-            O: 0,
-            ties: 0
-        };
+    <!-- Side panel showing a short editable project description and small KB -->
+    <aside class="side-panel" aria-label="Assistant info panel">
+      <h3 style="margin-bottom:8px">Project Info</h3>
+      <label style="font-size:.9rem;color:#374151">Project Description (used by assistant when answering):</label>
+      <textarea id="projectDescription" class="proj-desc">This is a Tic Tac Toe web game with 3D UI, a local computer opponent, game history, and an integrated local assistant that answers questions about the project. It's implemented as a single HTML file and runs entirely in the browser with no server.</textarea>
 
-        const winningConditions = [
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8],
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8],
-            [0, 4, 8],
-            [2, 4, 6]
-        ];
+      <div class="kb-editor">
+        <label style="font-size:.9rem;color:#374151">Knowledge base (Q → A). Add entries to teach the assistant:</label>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="kbQ" placeholder="question (e.g. how to play)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
+          <input id="kbA" placeholder="answer (short)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6eef8" />
+          <button id="teachBtn" class="btn">Teach</button>
+        </div>
+        <p style="font-size:.82rem;color:#64748b;margin-top:8px">You can add quick Q/A pairs that the assistant will use immediately.</p>
+      </div>
+    </aside>
+  </div>
 
-        // Add click event for all cells
-        cells.forEach((cell, index) => {
-            cell.addEventListener('click', () => handleCellClick(cell, index));
-        });
+  <!-- History modal -->
+  <div class="overlay" id="overlay">
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="history-title">
+      <h3 id="history-title">Game History & Streak</h3>
+      <div class="history-list" id="historyList"></div>
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end">
+        <button id="clearHistory" class="btn">Clear</button>
+        <button id="closeHistory" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
 
-        // Reset button event
-        resetButton.addEventListener('click', resetGame);
+  <!-- Congrats overlay -->
+  <div class="congrats" id="congrats">
+    <div class="congrats-card" id="congratsCard">
+      <h2 id="congratsTitle">Congratulations!</h2>
+      <p id="congratsName" style="font-weight:900;font-size:1.8rem;margin-top:6px">Player X</p>
+    </div>
+  </div>
 
-        function handleCellClick(cell, index) {
-            if (gameState[index] !== "" || !gameActive) {
-                return;
-            }
+  <!-- Assistant floating button + panel -->
+  <div class="assistant-toggle" id="assistantToggle" title="Open Assistant">AI</div>
 
-            gameState[index] = currentPlayer;
-            cell.textContent = currentPlayer;
-            cell.classList.add(currentPlayer.toLowerCase());
+  <div class="assistant-panel" id="assistantPanel" role="dialog" aria-label="Local assistant">
+    <div class="assistant-header">
+      <div><strong>Project Assistant</strong><div style="font-size:.8rem;opacity:.85">Local — no API</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="saveKbBtn" class="btn" style="background:#2563eb">Save KB</button>
+        <button id="closeAssistant" class="btn">Close</button>
+      </div>
+    </div>
+    <div class="assistant-body" id="assistantBody"></div>
 
-            checkWin();
-            checkDraw();
-            
-            if (gameActive) {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                statusDisplay.textContent = `${currentPlayer}'s turn`;
-            }
-        }
+    <div class="assistant-input">
+      <input id="assistantInput" placeholder="Ask about the project, the game, or gameplay..." style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6eef8" />
+      <button id="askBtn" class="btn">Ask</button>
+      <button id="teachQuick" class="btn" title="Quick teach from last question">Teach</button>
+    </div>
+  </div>
 
-        function checkWin() {
-            let roundWon = false;
+<script>
+  /******************************
+   *  Game logic (same as before)
+   ******************************/
+  const cells = Array.from(document.querySelectorAll('[data-cell]'));
+  const statusDisplay = document.getElementById('status');
+  const resetButton = document.getElementById('reset-button');
+  const xScoreDisplay = document.getElementById('x-score');
+  const oScoreDisplay = document.getElementById('o-score');
+  const tiesDisplay = document.getElementById('ties');
 
-            for (let i = 0; i < winningConditions.length; i++) {
-                const [a, b, c] = winningConditions[i];
-                
-                if (gameState[a] === '' || gameState[b] === '' || gameState[c] === '') {
-                    continue;
-                }
-                
-                if (gameState[a] === gameState[b] && gameState[b] === gameState[c]) {
-                    roundWon = true;
-                    break;
-                }
-            }
+  const modeHuman = document.getElementById('modeHuman');
+  const modeComputer = document.getElementById('modeComputer');
 
-            if (roundWon) {
-                statusDisplay.textContent = `${currentPlayer} wins!`;
-                gameActive = false;
-                scores[currentPlayer]++;
-                updateScoreDisplay();
-                
-                setTimeout(() => {
-                    alert(`Player ${currentPlayer} wins!`);
-                    // Auto reset the board after win
-                    setTimeout(() => {
-                        resetGame();
-                    }, 500);
-                }, 100);
-                
-                return;
-            }
-        }
+  const historyBtn = document.getElementById('historyBtn');
+  const overlay = document.getElementById('overlay');
+  const historyListEl = document.getElementById('historyList');
+  const closeHistory = document.getElementById('closeHistory');
+  const clearHistory = document.getElementById('clearHistory');
 
-        function checkDraw() {
-            if (!gameState.includes("") && gameActive) {
-                statusDisplay.textContent = "Game ended in a draw!";
-                gameActive = false;
-                scores.ties++;
-                updateScoreDisplay();
-                
-                setTimeout(() => {
-                    alert("Game ended in a draw!");
-                    // Auto reset the board after draw
-                    setTimeout(() => {
-                        resetGame();
-                    }, 500);
-                }, 100);
-            }
-        }
+  const congratsEl = document.getElementById('congrats');
+  const congratsName = document.getElementById('congratsName');
+  const congratsTitle = document.getElementById('congratsTitle');
 
-        function resetGame() {
-            currentPlayer = 'X';
-            gameActive = true;
-            gameState = ["", "", "", "", "", "", "", "", ""];
-            statusDisplay.textContent = `${currentPlayer}'s turn`;
-            
-            cells.forEach(cell => {
-                cell.textContent = "";
-                cell.classList.remove('x');
-                cell.classList.remove('o');
-            });
-        }
+  let currentPlayer = 'X';
+  let gameActive = true;
+  let gameState = Array(9).fill('');
+  let scores = { X: 0, O: 0, ties: 0 };
+  let history = []; // e.g. [{result:'X',time:'...'}]
+  const winningConditions = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
 
-        function updateScoreDisplay() {
-            xScoreDisplay.textContent = scores.X;
-            oScoreDisplay.textContent = scores.O;
-            tiesDisplay.textContent = scores.ties;
-        }
-    </script>
-<h2>The Game is created with help of an AI</h2>
+  // add click events
+  cells.forEach((cell, idx) => {
+    cell.addEventListener('click', () => playerMove(cell, idx));
+  });
+  resetButton.addEventListener('click', resetGame);
+  historyBtn.addEventListener('click', showHistory);
+  closeHistory.addEventListener('click', () => overlay.style.display='none');
+  clearHistory.addEventListener('click', () => { history=[]; renderHistory(); });
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.style.display='none'; });
+
+  function playerMove(cell, idx){
+    if (!gameActive || gameState[idx] !== '') return;
+    if (modeComputer.checked && currentPlayer !== 'X') return; // only allow human moves when it's X's turn (computer is O)
+    placeMove(cell, idx, currentPlayer);
+    afterMove();
+  }
+
+  function placeMove(cell, idx, player){
+    gameState[idx] = player;
+    cell.textContent = player;
+    cell.classList.add(player.toLowerCase());
+  }
+
+  function afterMove(){
+    checkResult();
+    if (!gameActive) return;
+    currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+    statusDisplay.textContent = `${currentPlayer}'s turn`;
+    if (modeComputer.checked && currentPlayer === 'O' && gameActive){
+      setTimeout(() => computerMove(), 400);
+    }
+  }
+
+  function computerMove(){
+    const emptyIdx = gameState.map((v,i)=> v === '' ? i : null).filter(i=>i!==null);
+    for (let i of emptyIdx){
+      const copy = [...gameState]; copy[i] = 'O';
+      if (isWinning(copy, 'O')) { clickIndex(i); return; }
+    }
+    for (let i of emptyIdx){
+      const copy = [...gameState]; copy[i] = 'X';
+      if (isWinning(copy, 'X')) { clickIndex(i); return; }
+    }
+    if (gameState[4] === '') { clickIndex(4); return; }
+    const corners = [0,2,6,8].filter(i => gameState[i] === '');
+    if (corners.length){ clickIndex(randomChoice(corners)); return; }
+    if (emptyIdx.length) clickIndex(randomChoice(emptyIdx));
+  }
+
+  function clickIndex(i){
+    const cell = cells[i];
+    if (!cell) return;
+    placeMove(cell, i, 'O');
+    afterMove();
+  }
+
+  function randomChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function isWinning(state, player){
+    return winningConditions.some(([a,b,c]) => state[a]===player && state[b]===player && state[c]===player);
+  }
+
+  function checkResult(){
+    let roundWon = null;
+    for (const [a,b,c] of winningConditions){
+      if (gameState[a] && gameState[a] === gameState[b] && gameState[b] === gameState[c]){
+        roundWon = gameState[a];
+        break;
+      }
+    }
+    if (roundWon){
+      gameActive = false;
+      scores[roundWon] += 1;
+      statusDisplay.textContent = `${roundWon} wins!`;
+      updateScores();
+      pushHistory(roundWon);
+      setTimeout(()=> {
+        resetBoardForNextRound();
+      }, 800);
+      return;
+    }
+    if (!gameState.includes('')){
+      gameActive = false;
+      scores.ties += 1;
+      statusDisplay.textContent = `Draw`;
+      updateScores();
+      pushHistory('Tie');
+      setTimeout(()=> resetBoardForNextRound(), 800);
+    }
+  }
+
+  function resetBoardForNextRound(){
+    currentPlayer = 'X';
+    gameActive = true;
+    gameState = Array(9).fill('');
+    cells.forEach(c => { c.textContent=''; c.classList.remove('x','o'); });
+    statusDisplay.textContent = `${currentPlayer}'s turn`;
+  }
+
+  function updateScores(){
+    xScoreDisplay.textContent = scores.X;
+    oScoreDisplay.textContent = scores.O;
+    tiesDisplay.textContent = scores.ties;
+  }
+
+  function resetGame(){
+    currentPlayer = 'X';
+    gameActive = true;
+    gameState = Array(9).fill('');
+    history = [];
+    scores = { X:0, O:0, ties:0 };
+    cells.forEach(c => { c.textContent=''; c.classList.remove('x','o'); });
+    updateScores();
+    renderHistory();
+    statusDisplay.textContent = `${currentPlayer}'s turn`;
+  }
+
+  function pushHistory(result){
+    const time = new Date().toLocaleString();
+    const item = { result, time };
+    history.unshift(item);
+    if (history.length > 50) history.pop();
+    renderHistory();
+
+    if (history.length >= 3){
+      const latest3 = history.slice(0,3).map(h => h.result);
+      if (latest3[0] === latest3[1] && latest3[1] === latest3[2] && latest3[0] !== 'Tie'){
+        showCongrats(latest3[0]);
+      }
+    }
+  }
+
+  function renderHistory(){
+    historyListEl.innerHTML = '';
+    if (!history.length){
+      historyListEl.innerHTML = '<div style="padding:12px;color:#64748b">No games yet</div>';
+      return;
+    }
+    history.forEach(h => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      const who = h.result === 'Tie' ? 'Tie' : `Player ${h.result}`;
+      div.innerHTML = `<span>${who}</span><span style="opacity:.7;font-size:.9rem">${h.time}</span>`;
+      historyListEl.appendChild(div);
+    });
+  }
+
+  function showHistory(){ renderHistory(); overlay.style.display='flex'; }
+
+  function showCongrats(winner){
+    congratsName.textContent = `Player ${winner}`;
+    congratsTitle.textContent = `3 wins in a row!`;
+    congratsEl.style.display = 'flex';
+    createConfetti(28);
+    setTimeout(()=> { congratsEl.style.display='none'; congratsEl.querySelectorAll('.confetti').forEach(n=>n.remove()); }, 2200);
+  }
+
+  function createConfetti(n){
+    const colors = ['#ef4444','#f97316','#f59e0b','#10b981','#06b6d4','#2563eb','#7c3aed'];
+    for (let i=0;i<n;i++){
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.left = Math.random()*100 + 'vw';
+      el.style.background = colors[i % colors.length];
+      el.style.width = (6 + Math.random()*10) + 'px';
+      el.style.height = (12 + Math.random()*22) + 'px';
+      el.style.transform = `translateY(-300px) rotate(${Math.random()*360}deg)`;
+      el.style.animationDuration = (1200 + Math.random()*1000) + 'ms';
+      congratsEl.appendChild(el);
+    }
+  }
+
+  updateScores();
+  renderHistory();
+
+  // keyboard accessibility
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'r') resetGame();
+    if (e.key === ' ') {
+      modeComputer.checked = !modeComputer.checked;
+      modeHuman.checked = !modeComputer.checked;
+    }
+  });
+
+  /******************************************************
+   *  Local "AI" Assistant (no API) — knowledge-based
+   *  - exact matches
+   *  - keyword scoring
+   *  - fallback generator using project description
+   *  - teachable by user
+   ******************************************************/
+  const assistantToggle = document.getElementById('assistantToggle');
+  const assistantPanel = document.getElementById('assistantPanel');
+  const assistantBody = document.getElementById('assistantBody');
+  const assistantInput = document.getElementById('assistantInput');
+  const askBtn = document.getElementById('askBtn');
+  const closeAssistant = document.getElementById('closeAssistant');
+  const projectDescEl = document.getElementById('projectDescription');
+  const teachBtn = document.getElementById('teachBtn');
+  const kbQInput = document.getElementById('kbQ');
+  const kbAInput = document.getElementById('kbA');
+  const teachQuick = document.getElementById('teachQuick');
+  const saveKbBtn = document.getElementById('saveKbBtn');
+
+  // small local KB (starts with some entries)
+  let knowledgeBase = [
+    { q: 'how to play', a: 'Click any empty cell to place your mark. Get three in a row to win.' },
+    { q: 'what is this project', a: 'This is a browser Tic Tac Toe game with a local AI and history.' },
+    { q: 'how to play vs computer', a: 'Select "Human vs Computer". You play X and the computer responds as O.' },
+    { q: 'who built this', a: 'The game is built as a single-page web app and does not require any server.' }
+  ];
+
+  // load persisted KB + project description from localStorage (so it survives reload)
+  const STORAGE_KEY = 'local-assistant-v1';
+  function loadAssistantStorage(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed.kb) knowledgeBase = parsed.kb;
+      if (parsed.projectDescription) projectDescEl.value = parsed.projectDescription;
+      renderAssistantMessage({from:'bot', text: 'Assistant ready. Ask me anything about the project.'});
+    } catch(e){ console.warn('load err', e) }
+  }
+
+  function saveAssistantStorage(){
+    const payload = { kb: knowledgeBase, projectDescription: projectDescEl.value };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    renderAssistantMessage({from:'bot', text: 'Knowledge base saved locally.'});
+  }
+
+  saveKbBtn.addEventListener('click', saveAssistantStorage);
+
+  loadAssistantStorage();
+
+  assistantToggle.addEventListener('click', () => {
+    if (assistantPanel.style.display === 'flex') assistantPanel.style.display = 'none';
+    else assistantPanel.style.display = 'flex';
+  });
+  closeAssistant.addEventListener('click', () => assistantPanel.style.display = 'none');
+
+  askBtn.addEventListener('click', () => {
+    const q = assistantInput.value.trim();
+    if (!q) return;
+    processQuestion(q);
+    assistantInput.value = '';
+  });
+
+  assistantInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { askBtn.click(); }
+  });
+
+  teachBtn.addEventListener('click', () => {
+    const q = kbQInput.value.trim();
+    const a = kbAInput.value.trim();
+    if (!q || !a){ renderAssistantMessage({from:'bot', text:'Provide both a question and an answer to teach.'}); return; }
+    knowledgeBase.unshift({ q: q.toLowerCase(), a });
+    kbQInput.value = ''; kbAInput.value = '';
+    renderAssistantMessage({from:'bot', text: 'Learned: "' + q + '" → "' + a + '"' });
+  });
+
+  // quick teach: use last user message and the current assistant input to create KB
+  teachQuick.addEventListener('click', () => {
+    // find last user message in DOM
+    const lastUser = Array.from(assistantBody.querySelectorAll('.from-user')).pop();
+    const lastText = lastUser ? lastUser.textContent : '';
+    const answer = assistantInput.value.trim();
+    if (!lastText || !answer){ renderAssistantMessage({from:'bot', text:'No recent user message to teach or empty answer.'}); return; }
+    knowledgeBase.unshift({ q: lastText.toLowerCase(), a: answer });
+    assistantInput.value = '';
+    renderAssistantMessage({from:'bot', text:'Taught answer for: "' + lastText + '"' });
+  });
+
+  function processQuestion(rawQ){
+    const q = rawQ.trim();
+    renderAssistantMessage({from:'user', text: q});
+    const response = answerQuestion(q);
+    // emulate "thinking" delay
+    setTimeout(()=> renderAssistantMessage({from:'bot', text: response}), 250 + Math.random()*400);
+  }
+
+  function renderAssistantMessage({from, text}){
+    const div = document.createElement('div');
+    div.className = 'chat-bubble ' + (from === 'user' ? 'from-user' : 'from-bot');
+    div.textContent = text;
+    assistantBody.appendChild(div);
+    assistantBody.scrollTop = assistantBody.scrollHeight;
+  }
+
+  // Answer pipeline
+  function answerQuestion(q){
+    const ql = q.toLowerCase();
+
+    // 1) Direct exact match in KB
+    for (const entry of knowledgeBase){
+      if (entry.q === ql) return entry.a;
+    }
+
+    // 2) Simple fuzzy matching: exact words overlap scoring
+    const qWords = tokenize(ql);
+    let best = {score:0, entry:null};
+    for (const entry of knowledgeBase){
+      const entryWords = tokenize(entry.q);
+      const score = overlapScore(qWords, entryWords);
+      if (score > best.score){ best = {score, entry}; }
+    }
+    if (best.score >= 0.45 && best.entry) return best.entry.a + ' (from KB)';
+
+    // 3) Keyword rules for common questions
+    if (/project|about this|what is this|tell me about/i.test(q)){
+      // use project description to craft answer
+      const p = projectDescEl.value.trim();
+      if (p) return generateFromProjectDescription(q, p);
+    }
+    if (/how to play|rules|win|three in a row/i.test(q)) return 'You place X or O in empty squares. First to make three in a row horizontally, vertically or diagonally wins. You can play vs computer or vs a friend.';
+    if (/computer|bot|ai|opponent/i.test(q)) return 'The local computer opponent uses a simple strategy (win → block → center → corner → random). It runs entirely in your browser, no API needed.';
+    if (/who built|author|creator/i.test(q)) return 'This single-file web app was created to run locally in the browser. You can edit and teach the assistant via the side panel.';
+
+    // 4) fallback: short generative-style answer combining project description and the question
+    const p = projectDescEl.value.trim();
+    if (p) return generateFromProjectDescription(q, p);
+
+    // 5) final fallback
+    return "I don't know that yet. You can teach me by adding a Q&A in the Project Info side panel.";
+  }
+
+  // tokenize + simple score
+  function tokenize(s){
+    return s.split(/\W+/).filter(Boolean).map(w => w.toLowerCase());
+  }
+  function overlapScore(aWords, bWords){
+    if (!aWords.length || !bWords.length) return 0;
+    const aSet = new Set(aWords);
+    let hits = 0;
+    for (const w of bWords) if (aSet.has(w)) hits++;
+    return hits / Math.max(aWords.length, bWords.length);
+  }
+
+  // tiny template generator using the project description: picks sentences that match keywords
+  function generateFromProjectDescription(q, projectText){
+    const sentences = projectText.split(/(?<=[.?!])\s+/).filter(Boolean);
+    const qWords = tokenize(q);
+    // score sentences by keyword overlap
+    let scored = sentences.map(s => ({ s, score: overlapScore(qWords, tokenize(s)) }));
+    scored.sort((a,b)=>b.score - a.score);
+    if (scored[0] && scored[0].score > 0) {
+      // produce short answer by combining top 1-2 sentences
+      const top = scored.slice(0,2).map(x=>x.s).join(' ');
+      return top;
+    }
+    // otherwise, produce a short summary + invite to teach
+    return projectText.split('.').slice(0,2).join('. ').trim() + '. If you want more details, teach me with a question and answer in the side panel.';
+  }
+
+  // allow saving KB externally (download)
+  function downloadKB(){
+    const blob = new Blob([JSON.stringify({ kb: knowledgeBase, projectDescription: projectDescEl.value }, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'project-assistant-kb.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // quick utilities in UI
+  document.getElementById('teachBtn').addEventListener('click', () => {});
+  document.getElementById('askBtn').addEventListener('click', () => {});
+  document.getElementById('assistantToggle').addEventListener('click', () => {});
+  saveKbBtn.addEventListener('click', () => {});
+  // wire real events already added above
+
+  // small UX: show welcome
+  renderAssistantMessage({from:'bot', text: 'Hello! Ask me about the project, gameplay, or how the local bot works.'});
+
+  // Expose a tiny "assistant responder" so other parts of the page can ask programmatically
+  window.projectAssistant = {
+    ask: (q) => answerQuestion(q),
+    teach: (q, a) => { knowledgeBase.unshift({q:q.toLowerCase(), a}); saveAssistantStorage(); },
+    getKB: () => knowledgeBase,
+    setProjectDescription: (txt) => { projectDescEl.value = txt; saveAssistantStorage(); }
+  };
+
+  // Persist assistant changes automatically when project description loses focus
+  projectDescEl.addEventListener('blur', saveAssistantStorage);
+  // Save on unload
+  window.addEventListener('beforeunload', saveAssistantStorage);
+</script>
 </body>
 </html>
